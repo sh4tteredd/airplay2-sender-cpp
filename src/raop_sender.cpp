@@ -1088,8 +1088,16 @@ void RaopSender::sendAnnounce_() {
     sdp += "c=IN IP4 " + remoteIp + "\r\n";
     sdp += "t=0 0\r\n";
     sdp += "m=audio 0 RTP/AVP 96\r\n";
-    sdp += "a=rtpmap:96 L16/44100/2\r\n";
-    sdp += "a=fmtp:96 352 0 16 40 10 14 2 255 0 0 44100\r\n";
+    if (ap1Alac_) {
+        // ALAC is the universal classic-RAOP codec. Some minimal
+        // shairport-sync builds omit the FFmpeg PCM decoder but retain
+        // ALAC; TuneBlade also advertises AppleLossless.
+        sdp += "a=rtpmap:96 AppleLossless\r\n";
+        sdp += "a=fmtp:96 352 0 16 40 10 14 2 255 0 0 44100\r\n";
+    } else {
+        sdp += "a=rtpmap:96 L16/44100/2\r\n";
+        sdp += "a=fmtp:96 352 0 16 40 10 14 2 255 0 0 44100\r\n";
+    }
     sendRequest_("ANNOUNCE", rtspUri_(), "application/sdp", sdp);
 }
 
@@ -1995,7 +2003,7 @@ void RaopSender::sendAudioPacket_() {
     //    uncompressed-ALAC frame (#90).
     //  * AP1 RAOP announces L16 (RFC 3551) -> BIG-endian s16 raw PCM.
     std::string payload;
-    if (ap2_ && ap2_->encryptAudio) {
+    if ((ap2_ && ap2_->encryptAudio) || ap1Alac_) {
         payload = encodeAlacFrame_(frames, kFramesPerPacket);
     } else {
         payload.reserve(kPayloadBytes);

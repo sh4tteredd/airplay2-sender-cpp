@@ -108,6 +108,11 @@ public:
     // passes through; anything else is linear-resampled to 44100.
     void setInputFormat(uint32_t sampleRate);
 
+    // Local integration option: classic AirPlay (AP1) can advertise and send
+    // ALAC instead of L16 PCM. Some minimal shairport-sync builds omit the
+    // FFmpeg PCM decoder but always include ALAC (TuneBlade also uses ALAC).
+    void setAp1Alac(bool enabled) { ap1Alac_ = enabled; }
+
     // v0.66.x Phase 2/3, describe how the receiver must be reached BEFORE
     // start(). `auth` selects auth-setup / legacy-PIN / HAP-transient /
     // HAP-PIN / password / none; `airplay2` switches to the encrypted AP2
@@ -378,6 +383,7 @@ private:
     PairStage  pairStage_ = PairStage::None;
     RaopDeviceInfo::Auth authMethod_ = RaopDeviceInfo::Auth::None;
     bool        airplay2_   = false;
+    bool        ap1Alac_    = false;   // local integration: ALAC on classic RAOP
     std::string deviceId_;       // mDNS instance id (creds key)
     std::string credsJson_;      // stored long-term creds (empty = first pair)
     std::string digestPassword_; // pw=true RTSP digest password
